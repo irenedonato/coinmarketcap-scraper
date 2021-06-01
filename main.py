@@ -3,7 +3,7 @@ from scraper import Scraper
 
 def main():
     """
-    use the class scraper as a command line interface
+    serves the class Scraper as a command line interface
     """
     parser = argparse.ArgumentParser(description='scrape ')
         

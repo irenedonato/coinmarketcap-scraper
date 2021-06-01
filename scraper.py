@@ -10,34 +10,38 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from tqdm import tqdm
 
+
+_BASE_URL = "https://coinmarketcap.com"
+
+
 class Scraper:
     """
-    it scrapes data from coinmarketcap.com
-    it stores historical data for each cryptocurrency in a csv file
+    scrapes data from coinmarketcap.com and stores historical data
+    for each cryptocurrency in a csv file
     """
 
     def __init__(self, load_time, geckodriver_path, 
                  out_dir = 'coin_data', months_back = 38,
                  reload=False):
         """
-        it takes all the cryptocurrency names with a get request,
-        it opens a browser and for each cryptocurrency scrapes the data
+        takes all the cryptocurrency names with a get request,
+        opens a browser and for each cryptocurrency scrapes the data
         
         Args:
             load_time (int): time to wait for loading a page
             geckodriver_path (str): path to the GECKODRIVER 
                                     (executable file) compatible with your browser
-            out_dir (str, optional): directory where to store historical data.
+            out_dir (str, optional): directory where to save historical data.
                                     if it does not exist, it will create it.
                                     Defaults to 'coin_data'.
-            months_back (int, optional): months of data to collect (back in time) 
+            months_back (int, optional): number of months to collect in the past 
                                         Defaults to 38.
             reload (bool, optional): if false, first it checks in out_dir if there are
-                                     already data. If so, it downloads data only 
+                                     already saved data. If so, it downloads data only 
                                      for the missing cryptocurrencies. 
                                      Defaults to False.
         """
-        self._BASE_URL = "https://coinmarketcap.com"
+        self.base_url = _BASE_URL
         self.load_time = load_time
         self.out_dir = out_dir
         if not os.path.exists(self.out_dir):
@@ -49,7 +53,7 @@ class Scraper:
         
     def get_currencies(self, selected_coin = 'all'):
         """
-        it stores historical data for each cryptocurrency in a csv file
+        stores historical data for each cryptocurrency in a csv file
         Args:
             selected_coin (str, optional): which cryptocurrency scrape.
             Defaults to 'all'.
@@ -62,12 +66,12 @@ class Scraper:
 
 
     def get_all_coin_links(self):
-        """it takes all the crypto currency from the site coinmarketcap.com
+        """takes all the crypto currency from coinmarketcap.com
         with a get request to the site
         Returns:
-            set: all the crypto currency
+            set: all the crypto currency links
         """
-        url = self._BASE_URL + "/all/views/all/"
+        url = self.base_url + "/all/views/all/"
         response = requests.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
         table = soup.find('tbody')
@@ -84,9 +88,9 @@ class Scraper:
 
     def get_all_historical_data(self):
         """if reload:
-               get historical data for all the cryptocurrency and save them
+               gets historical data for all the cryptocurrency and saves them
            else:
-               get historical data for the missing cryptocurrency 
+               gets historical data for the missing cryptocurrency 
                (first it checks in out_dir wether there are already data)
         """
         coins = self.get_all_coin_links()
@@ -114,12 +118,12 @@ class Scraper:
     
     def accept_cookies(self):
         """
-        The first time the browser load the site, 
-        it is needed to accept the cookies,
+        The first time the browser loads the site, 
+        one needs to accept the cookies,
         otherwise the cookies panel will obscure 
         the button to load more data
         """  
-        self.driver.get(self._BASE_URL)
+        self.driver.get(self.base_url)
         time.sleep(self.load_time)    
         try:
             panel_close_path = "/html/body/div/div/div[3]/div[2]/div[2]"
@@ -131,7 +135,7 @@ class Scraper:
         return
             
     def save_historical_data(self, coin):
-        """save historical data of coin
+        """saves historical data of coin
         """
         print("Reading data for", coin)
         table = self.get_historical_data(coin)
@@ -145,13 +149,13 @@ class Scraper:
         return        
 
     def scroll_and_sleep(self):
-        """use down arrow to go down and sleep"""
+        """uses down arrow to scroll down and sleeps"""
         time.sleep(self.load_time + (random.randint(10, 100) / 1500))
         self.driver.find_element_by_tag_name('body').send_keys(Keys.PAGE_DOWN)
         return
     
     def scroll_and_load_more(self):
-        """it scrolls down 3 times and clicks on button 'load more'
+        """scrolls down 3 times and clicks on button 'load more'
         """
         for j in range(3):
             self.scroll_and_sleep()
@@ -161,15 +165,15 @@ class Scraper:
         return
 
     def get_historical_data(self, coin):
-        """load data for coin back in time
+        """loads data for coin back in time
 
         Args:
-            coin (string): a certain  cryptocurrency
+            coin (string): a certain cryptocurrency
 
         Returns:
-            [string]: tale with historical data
+            string: table with historical data
         """
-        url = self._BASE_URL + "/currencies/{}/historical-data/".format(coin)
+        url = self.base_url + "/currencies/{}/historical-data/".format(coin)
         self.driver.get(url)
         time.sleep(self.load_time+(random.randint(500,1000)/500))
         
